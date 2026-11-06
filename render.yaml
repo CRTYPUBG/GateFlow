@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gateflow
+    runtime: docker
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: GATEFLOW_ADMIN_KEY
+        generateValue: true
+      - key: GATEFLOW_ALLOW_LOCAL_DEV
+        value: "false"
+      - key: GATEFLOW_TRUST_CLOUDFLARE
+        value: "true"

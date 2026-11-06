@@ -93,17 +93,11 @@ func main() {
 	controlMux := http.NewServeMux()
 	cpServer.RegisterRoutes(controlMux)
 
+	// Mount Control Plane /api/v1/ directly onto Gateway for single-port PaaS hosts (Render/Koyeb/Fly/Railway)
+	gatewayMux.Handle("/api/v1/", corsWrapper(controlMux))
+
 	// CORS for Control Plane frontend
-	corsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Key, X-API-Key")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		controlMux.ServeHTTP(w, r)
-	})
+	corsHandler := corsWrapper(controlMux)
 
 	// Start Gateway Server
 	gatewayServer := &http.Server{
@@ -114,26 +108,29 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start Admin Control Plane Server
-	adminServer := &http.Server{
-		Addr:         ":" + cfg.AdminPort,
-		Handler:      corsHandler,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+	// Start Dedicated Admin Control Plane Server if running on different ports
+	var adminServer *http.Server
+	if cfg.AdminPort != "" && cfg.AdminPort != cfg.HTTPPort {
+		adminServer = &http.Server{
+			Addr:         ":" + cfg.AdminPort,
+			Handler:      corsHandler,
+			ReadTimeout:  15 * time.Second,
+			WriteTimeout: 15 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		}
+
+		go func() {
+			log.Printf("[GateFlow] Dedicated Control Plane listening on http://0.0.0.0:%s (Admin Key: %s)", cfg.AdminPort, cfg.AdminKey)
+			if err := adminServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Printf("[GateFlow] Admin server stopped: %v", err)
+			}
+		}()
 	}
 
 	go func() {
-		log.Printf("[GateFlow] Data Plane listening on http://0.0.0.0:%s", cfg.HTTPPort)
+		log.Printf("[GateFlow] Traffic Engine & Unified API listening on http://0.0.0.0:%s", cfg.HTTPPort)
 		if err := gatewayServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("[GateFlow] Gateway server failed: %v", err)
-		}
-	}()
-
-	go func() {
-		log.Printf("[GateFlow] Control Plane listening on http://0.0.0.0:%s (Admin Key: %s)", cfg.AdminPort, cfg.AdminKey)
-		if err := adminServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("[GateFlow] Admin server failed: %v", err)
 		}
 	}()
 
@@ -147,9 +144,24 @@ func main() {
 	defer shutdownCancel()
 
 	_ = gatewayServer.Shutdown(shutdownCtx)
-	_ = adminServer.Shutdown(shutdownCtx)
+	if adminServer != nil {
+		_ = adminServer.Shutdown(shutdownCtx)
+	}
 	healthChecker.Stop()
 	log.Println("[GateFlow] Stopped successfully.")
+}
+
+func corsWrapper(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Key, X-API-Key")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func seedDemoData(store storage.Storage) {

@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	httpPort := getEnv("GATEFLOW_PORT", "8080")
+	httpPort := getEnv("PORT", getEnv("GATEFLOW_PORT", "8080"))
 	adminPort := getEnv("GATEFLOW_ADMIN_PORT", "8081")
 	adminKey := getEnv("GATEFLOW_ADMIN_KEY", "admin-secret-gateflow")
 	databaseURL := getEnv("DATABASE_URL", "")

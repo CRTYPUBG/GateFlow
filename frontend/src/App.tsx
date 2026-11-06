@@ -8,8 +8,8 @@ import type {
   AnalyticsOverview, RequestLog, AuditLog 
 } from './types';
 
-const ADMIN_URL = 'http://localhost:8081';
-const ADMIN_KEY = 'admin-secret-gateflow';
+const ADMIN_URL = (import.meta as any).env?.VITE_ADMIN_URL || 'http://localhost:8081';
+const ADMIN_KEY = (import.meta as any).env?.VITE_ADMIN_KEY || 'admin-secret-gateflow';
 
 export default function App() {
   const [tab, setTab] = useState<'dashboard' | 'routes' | 'upstreams' | 'keys' | 'ratelimits' | 'logs' | 'audit'>('dashboard');
