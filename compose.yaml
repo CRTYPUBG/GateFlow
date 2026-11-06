@@ -1,0 +1,81 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gateflow-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - GATEFLOW_PORT=8080
+      - GATEFLOW_ADMIN_PORT=8081
+      - GATEFLOW_ADMIN_KEY=${GATEFLOW_ADMIN_KEY:-admin-secret-gateflow}
+      - DATABASE_URL=postgres://gateflow:${POSTGRES_PASSWORD:-gateflow_secret}@postgres:5432/gateflow?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - GATEFLOW_TRUST_CLOUDFLARE=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: gateflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gateflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gateflow_secret}
+      POSTGRES_DB: gateflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gateflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gateflow-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: gateflow-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - promdata:/prometheus
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: gateflow-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  pgdata:
+  redisdata:
+  promdata:
+  grafanadata:
