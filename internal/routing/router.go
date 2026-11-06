@@ -12,8 +12,8 @@ import (
 
 // MatchResult contains the selected route and any extracted route variables
 type MatchResult struct {
-	Route       *core.Route
-	MatchedPath string
+	Route        *core.Route
+	MatchedPath  string
 	RewrittenURL string
 }
 

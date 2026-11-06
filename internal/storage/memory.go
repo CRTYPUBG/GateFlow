@@ -55,14 +55,14 @@ type Storage interface {
 
 // MemoryStorage is a thread-safe in-memory storage implementation for standalone execution and tests
 type MemoryStorage struct {
-	mu           sync.RWMutex
-	upstreams    map[string]*core.Upstream
-	routes       map[string]*core.Route
-	apiKeys      map[string]*core.APIKey
-	rateLimits   map[string]*core.RateLimitPolicy
-	ipPolicies   map[string]*core.IPPolicy
+	mu            sync.RWMutex
+	upstreams     map[string]*core.Upstream
+	routes        map[string]*core.Route
+	apiKeys       map[string]*core.APIKey
+	rateLimits    map[string]*core.RateLimitPolicy
+	ipPolicies    map[string]*core.IPPolicy
 	cachePolicies map[string]*core.CachePolicy
-	auditLogs    []*core.AuditLog
+	auditLogs     []*core.AuditLog
 }
 
 func NewMemoryStorage() *MemoryStorage {

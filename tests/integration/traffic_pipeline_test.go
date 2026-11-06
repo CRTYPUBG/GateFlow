@@ -59,12 +59,12 @@ func TestFullTrafficPipeline_Integration(t *testing.T) {
 
 	// 3. Register Upstream
 	ups := &core.Upstream{
-		ID:       "ups_backend",
-		Name:     "Test Backend Upstream",
-		BaseURL:  upstreamServer.URL,
-		Active:   true,
-		Healthy:  true,
-		Timeout:  3 * time.Second,
+		ID:      "ups_backend",
+		Name:    "Test Backend Upstream",
+		BaseURL: upstreamServer.URL,
+		Active:  true,
+		Healthy: true,
+		Timeout: 3 * time.Second,
 	}
 	_ = store.SaveUpstream(ctx, ups)
 
@@ -92,17 +92,17 @@ func TestFullTrafficPipeline_Integration(t *testing.T) {
 
 	// 7. Register Route
 	route := &core.Route{
-		ID:            "rt_test",
-		PathPattern:   "/test/service/*",
-		Methods:       []string{"GET"},
-		UpstreamID:    ups.ID,
-		StripPrefix:   "/test/service",
-		AuthRequired:  true,
+		ID:             "rt_test",
+		PathPattern:    "/test/service/*",
+		Methods:        []string{"GET"},
+		UpstreamID:     ups.ID,
+		StripPrefix:    "/test/service",
+		AuthRequired:   true,
 		RequiredScopes: []string{"read"},
-		RateLimitID:   rlPolicy.ID,
-		CachePolicyID: cpPolicy.ID,
-		Active:        true,
-		Priority:      10,
+		RateLimitID:    rlPolicy.ID,
+		CachePolicyID:  cpPolicy.ID,
+		Active:         true,
+		Priority:       10,
 	}
 	_ = store.SaveRoute(ctx, route)
 	_ = engine.UpdateRoutes([]*core.Route{route})

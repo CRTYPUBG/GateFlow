@@ -9,16 +9,16 @@ import (
 
 // MetricsCollector tracks real-time traffic statistics safely
 type MetricsCollector struct {
-	TotalRequests      uint64
-	Requests2xx        uint64
-	Requests3xx        uint64
-	Requests4xx        uint64
-	Requests5xx        uint64
-	RateLimitBlocks    uint64
-	CacheHits          uint64
-	CacheMisses        uint64
-	ActiveConnections  int64
-	mu                 sync.RWMutex
+	TotalRequests     uint64
+	Requests2xx       uint64
+	Requests3xx       uint64
+	Requests4xx       uint64
+	Requests5xx       uint64
+	RateLimitBlocks   uint64
+	CacheHits         uint64
+	CacheMisses       uint64
+	ActiveConnections int64
+	mu                sync.RWMutex
 }
 
 var DefaultCollector = &MetricsCollector{}

@@ -78,10 +78,10 @@ type APIKey struct {
 type RateLimitPolicy struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
-	Limit     int64     `json:"limit"`          // Max requests allowed
-	WindowSec int64     `json:"window_sec"`     // In seconds (e.g. 60)
-	Burst     int64     `json:"burst"`          // Allowed burst above limit
-	Dimension string    `json:"dimension"`      // "ip", "api_key", "route", "global"
+	Limit     int64     `json:"limit"`      // Max requests allowed
+	WindowSec int64     `json:"window_sec"` // In seconds (e.g. 60)
+	Burst     int64     `json:"burst"`      // Allowed burst above limit
+	Dimension string    `json:"dimension"`  // "ip", "api_key", "route", "global"
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

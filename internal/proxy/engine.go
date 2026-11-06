@@ -111,11 +111,14 @@ func (e *Engine) UpdateRoutes(routes []*core.Route) error {
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
-	// 1. Generate Request ID
+	// 1. Generate Request ID and enforce max request body size (10MB limit)
 	reqIDBytes := make([]byte, 8)
 	rand.Read(reqIDBytes)
 	reqID := "req_" + hex.EncodeToString(reqIDBytes)
 	w.Header().Set("X-Request-ID", reqID)
+
+	// Guard against unbounded body reading attacks (10 MB cap)
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 
 	// 2. Resolve Client IP
 	clientIP, err := e.proxyManager.GetClientIP(r)
@@ -261,6 +264,8 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			pr.Out.Host = parsedUpstreamURL.Host
 			pr.SetXForwarded()
 			pr.Out.Header.Set("X-GateFlow-Request-ID", reqID)
+			// Remove client API key from headers forwarded to upstream to prevent leakage
+			pr.Out.Header.Del("X-API-Key")
 		},
 		ErrorHandler: func(rw http.ResponseWriter, req *http.Request, proxyErr error) {
 			e.respondError(rw, http.StatusBadGateway, fmt.Sprintf("Upstream connection error: %v", proxyErr), reqID)

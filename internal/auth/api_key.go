@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	KeyPrefixLive = "gf_live_"
+	KeyPrefixLive  = "gf_live_"
 	KeyRandomBytes = 24
 )
 

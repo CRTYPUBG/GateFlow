@@ -10,7 +10,7 @@ import (
 
 // RedisLimiter implements sliding window / token bucket using Redis Lua scripts
 type RedisLimiter struct {
-	client  *redis.Client
+	client   *redis.Client
 	fallback Limiter
 }
 

@@ -190,13 +190,13 @@ const (
 
 // CircuitBreaker prevents cascading failures when an upstream is down
 type CircuitBreaker struct {
-	state          int32 // atomic CircuitState
-	failureCount   int64
-	successCount   int64
-	threshold      int64
-	resetTimeout   time.Duration
+	state           int32 // atomic CircuitState
+	failureCount    int64
+	successCount    int64
+	threshold       int64
+	resetTimeout    time.Duration
 	lastStateChange time.Time
-	mu             sync.Mutex
+	mu              sync.Mutex
 }
 
 func NewCircuitBreaker(threshold int64, resetTimeout time.Duration) *CircuitBreaker {
